@@ -12,17 +12,14 @@ import kotlinx.coroutines.launch
 
 class AlarmViewModel:ViewModel() {
     val repository = Repository()
-    val newsList = MutableLiveData<List<DomainModel.News>>()
-    val status = MutableLiveData<States>(States.NOT_LOADING)
+    val responseState = MutableLiveData<NetworkResponse>()
 
 
     fun loadNewsList(){
         viewModelScope.launch(Dispatchers.IO) {
             val networkResponse = repository.getNewsList()
-            when(networkResponse){
-                is NetworkResponse.Success-> newsList.postValue(networkResponse.response)
-                is NetworkResponse.Error -> status.postValue(States.ERROR)
-            }
+            responseState.postValue(networkResponse)
+
         }
     }
 }

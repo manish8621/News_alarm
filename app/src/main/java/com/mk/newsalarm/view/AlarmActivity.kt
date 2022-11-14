@@ -1,5 +1,6 @@
 package com.mk.newsalarm.view
 
+import android.content.Context
 import android.media.Ringtone
 import android.media.RingtoneManager
 import androidx.appcompat.app.AppCompatActivity
@@ -8,16 +9,30 @@ import android.speech.tts.TextToSpeech
 import android.speech.tts.TextToSpeech.OnInitListener
 import android.speech.tts.UtteranceProgressListener
 import android.widget.Toast
+import androidx.datastore.core.DataStore
+import androidx.datastore.dataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
+import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.mk.newsalarm.databinding.ActivityAlarmBinding
+import com.mk.newsalarm.model.api.NetworkResponse
 import com.mk.newsalarm.model.domain.DomainModel
 import com.mk.newsalarm.model.isNetworkAvailable
 import com.mk.newsalarm.viewmodel.AlarmViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.*
-//TODO: close activity after alarm finished news
 
 
 class AlarmActivity : AppCompatActivity(),OnInitListener {
+
+    private val PENDING_ALARM = stringPreferencesKey("pending_alarm")
     lateinit var viewModel: AlarmViewModel
     lateinit var binding: ActivityAlarmBinding
     lateinit var tts: TextToSpeech
@@ -31,6 +46,8 @@ class AlarmActivity : AppCompatActivity(),OnInitListener {
         binding = ActivityAlarmBinding.inflate(layoutInflater)
         binding.lifecycleOwner = this
         setContentView(binding.root)
+
+
 
         //init a ringtone
         val ringtoneUri = RingtoneManager.getActualDefaultRingtoneUri(this,RingtoneManager.TYPE_ALARM)
@@ -55,8 +72,9 @@ class AlarmActivity : AppCompatActivity(),OnInitListener {
             }
             override fun onDone(utteranceId: String?) {
                 //read after done previous
-                if(iterator.hasNext())
+                if(iterator.hasNext()) {
                     speak(iterator.next().title)
+                }
                 else {
                     Toast.makeText(
                         this@AlarmActivity,
@@ -74,26 +92,38 @@ class AlarmActivity : AppCompatActivity(),OnInitListener {
         })
 
         //read news when available
-        viewModel.newsList.observe(this){
+        viewModel.responseState.observe(this){
+            when(it){
+                is NetworkResponse.Success -> {
+                    if(it.response.isNullOrEmpty().not() && ttsAvailable)
+                    {
+                        if (::iterator.isInitialized.not() ) iterator = it.response.listIterator()
+                        //read news
+                        speak(iterator.next().title)
+                    }
+                    else ringTheAlarm()
+                }
 
-
-            if(it.isNullOrEmpty().not() && ttsAvailable)
-            {
-                if (::iterator.isInitialized.not() ) iterator = it.listIterator()
-
-                //read news
-                speak(iterator.next().title)
-
+                is NetworkResponse.Error -> {
+                    ringTheAlarm()
+                    Toast.makeText(this, "network error", Toast.LENGTH_SHORT).show()
+                }
             }
-            else ringTheAlarm()
         }
 
         //stop btn
         binding.stopBtn.setOnClickListener{
+
             finish()
         }
     }
 
+
+    override fun onResume() {
+        super.onResume()
+        //clear pending alarm from data store
+        clearDataStore()
+    }
     private fun ringTheAlarm() {
          ringtone.play()
     }
@@ -123,6 +153,14 @@ class AlarmActivity : AppCompatActivity(),OnInitListener {
         tts.speak(text, TextToSpeech.QUEUE_FLUSH,null,"")
     }
 
+    private fun clearDataStore() {
+
+        lifecycleScope.launch{
+            this@AlarmActivity.dataStore.edit {
+                it[PENDING_ALARM] = ""
+            }
+        }
+    }
     override fun onDestroy() {
         super.onDestroy()
         stopNewsRead()
