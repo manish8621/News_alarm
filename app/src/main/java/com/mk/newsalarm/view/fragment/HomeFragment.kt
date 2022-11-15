@@ -1,43 +1,28 @@
 package com.mk.newsalarm.view.fragment
 
-import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.net.ConnectivityManager
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.core.content.getSystemService
-import androidx.datastore.core.DataStore
-import androidx.datastore.dataStore
-import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.timepicker.MaterialTimePicker
 import com.mk.newsalarm.MainActivity
 import com.mk.newsalarm.R
 import com.mk.newsalarm.databinding.FragmentHomeBinding
-import com.mk.newsalarm.databinding.FragmentNewsListBinding
 import com.mk.newsalarm.view.AlarmActivity
 import com.mk.newsalarm.view.dataStore
-import com.mk.newsalarm.viewmodel.NewsListViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.Calendar
-import java.util.Date
 
 class HomeFragment : Fragment() {
 
@@ -83,7 +68,7 @@ class HomeFragment : Fragment() {
     }
 
     private suspend fun readFromDataStore(){
-        val data = requireContext().dataStore.data.map { pref->pref[PENDING_ALARM]?:"null" }.asLiveData().observe(viewLifecycleOwner){
+        val data = requireContext().dataStore.data.map { pref->pref[PENDING_ALARM]?:"" }.asLiveData().observe(viewLifecycleOwner){
             if (it!=null && it.isNotEmpty()) updatePendingAlarmUi(it)
             else hideCancelUi()
         }
