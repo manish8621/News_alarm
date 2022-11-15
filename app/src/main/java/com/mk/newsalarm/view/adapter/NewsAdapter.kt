@@ -12,30 +12,20 @@ import com.mk.newsalarm.model.domain.DomainModel
 
 class NewsAdapter:ListAdapter<DomainModel.News,NewsAdapter.ItemViewHolder>(DiffUtilItemCallback()) {
 
-    var clickListener:((news:DomainModel.News)->Unit)? = null
-    var readMoreClickListener:((news:DomainModel.News)->Unit)? = null
-    var speakClickListener:((news:DomainModel.News,imageButton:ImageButton)->Unit)? = null
-
+    var clickListener : ClickListener? = null
     class ItemViewHolder(private val binding:NewsItemLayoutBinding):RecyclerView.ViewHolder(binding.root){
 
         fun bind(news: DomainModel.News
-                 ,clickListener:((news:DomainModel.News)->Unit)?
-                 ,readMoreClickListener:((news:DomainModel.News)->Unit)?
-                 ,speakClickListener:((news:DomainModel.News,imageButton:ImageButton)->Unit)?){
+                 ,clickListener:ClickListener?
+                 ) {
             binding.news = news
             clickListener?.let {
-                binding.speakerIb.setOnClickListener{ _->
-                    it.invoke(news)
+
+                binding.readMoreIb.setOnClickListener { _ ->
+                    it.onReadMoreOnClicked(news)
                 }
-            }
-            readMoreClickListener?.let {
-                binding.readMoreIb.setOnClickListener{ _->
-                    it.invoke(news)
-                }
-            }
-            speakClickListener?.let {
-                binding.speakerIb.setOnClickListener{ _->
-                    it.invoke(news,binding.speakerIb)
+                binding.speakerIb.setOnClickListener { _ ->
+                    it.onSpeakerClicked(news, binding.speakerIb)
                 }
             }
         }
@@ -54,17 +44,15 @@ class NewsAdapter:ListAdapter<DomainModel.News,NewsAdapter.ItemViewHolder>(DiffU
     }
 
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
-        holder.bind(news = getItem(position), clickListener = clickListener, readMoreClickListener = readMoreClickListener,speakClickListener)
+        holder.bind(news = getItem(position), clickListener = clickListener)
     }
-    fun setOnClickListener(clickListener: ((news:DomainModel.News)->Unit))
-    {
+
+    fun setOnClickListeners(clickListener: ClickListener){
         this.clickListener = clickListener
     }
-    fun setReadMoreOnClickListener(readMoreClickListener:((news:DomainModel.News)->Unit)){
-        this.readMoreClickListener = readMoreClickListener
-    }
-    fun setSpeakOnClickListener(speakClickListener:((news:DomainModel.News,imageButton:ImageButton)->Unit)){
-        this.speakClickListener = speakClickListener
+    interface ClickListener{
+        fun onReadMoreOnClicked(news: DomainModel.News)
+        fun onSpeakerClicked(news: DomainModel.News,speakBtn:ImageButton)
     }
 }
 class DiffUtilItemCallback():DiffUtil.ItemCallback<DomainModel.News>(){
@@ -75,3 +63,4 @@ class DiffUtilItemCallback():DiffUtil.ItemCallback<DomainModel.News>(){
         return oldItem == newItem
     }
 }
+

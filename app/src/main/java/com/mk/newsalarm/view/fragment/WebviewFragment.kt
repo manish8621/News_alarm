@@ -44,7 +44,6 @@ class WebviewFragment : Fragment() {
 
         val args : WebviewFragmentArgs by navArgs()
         url = args.url
-        Toast.makeText(context, url, Toast.LENGTH_SHORT).show()
         loadPage()
 
     }

@@ -1,24 +1,19 @@
 package com.mk.newsalarm.view.fragment
 
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.net.Uri
 import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.speech.tts.TextToSpeech.OnInitListener
-import android.speech.tts.Voice
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.Toast
-import androidx.lifecycle.findViewTreeViewModelStoreOwner
 import androidx.navigation.fragment.findNavController
 import com.mk.newsalarm.MainActivity
-import com.mk.newsalarm.R
 import com.mk.newsalarm.databinding.FragmentNewsListBinding
-import com.mk.newsalarm.model.api.States
+import com.mk.newsalarm.model.domain.DomainModel
 import com.mk.newsalarm.model.isNetworkAvailable
 import com.mk.newsalarm.view.adapter.NewsAdapter
 import com.mk.newsalarm.viewmodel.NewsListViewModel
@@ -47,35 +42,33 @@ class NewsListFragment : Fragment() ,OnInitListener{
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val adapter = NewsAdapter()
-        binding.recyclerView.adapter = adapter
+        val adapter = NewsAdapter().also {
 
-        adapter.setOnClickListener {
-            Toast.makeText(context, "speak", Toast.LENGTH_SHORT).show()
+            it.setOnClickListeners(object:NewsAdapter.ClickListener{
+
+                override fun onReadMoreOnClicked(news: DomainModel.News) {
+                    findNavController().navigate(NewsListFragmentDirections.actionNewsListFragmentToWebviewFragment(news.url))
+                }
+
+                override fun onSpeakerClicked(news: DomainModel.News, speakBtn: ImageButton) {
+                    speakBtn.animate().scaleX(1.3F).scaleY(1.3F).setDuration(500L).withEndAction {
+                        speakBtn.animate().scaleX(1F).scaleY(1F).setDuration(500L).start()
+                    }.start()
+                    if(speakBtn.tag=="ready"){
+                        speakBtn.tag = "speaking";
+                        speak(news.content)
+                    }
+                    else{
+                        speakBtn.tag = "ready";
+                        tts.stop()
+                    }
+                }
+
+            })
         }
 
-        adapter.setReadMoreOnClickListener { news ->
-
-            speak("Hello World")
-//            Intent(android.content.Intent.ACTION_VIEW).also {
-//                it.data = Uri.parse(news.url)
-//                startActivity(it)
-//            }
-            findNavController().navigate(NewsListFragmentDirections.actionNewsListFragmentToWebviewFragment(news.url))
-        }
-
-        adapter.setSpeakOnClickListener { news,imgBtn ->
-            if(imgBtn.tag=="ready"){
-                imgBtn.tag = "speaking";
-                imgBtn.setImageResource(R.drawable.ic_baseline_speaker_phone_24)
-                speak(news.content)
-            }
-            else{
-                imgBtn.tag = "ready";
-                imgBtn.setImageResource(R.drawable.ic_baseline_speaker_24)
-                tts.stop()
-
-            }
+        binding.recyclerView.also{
+            it.adapter = adapter
         }
 
         viewModel.newsList.observe(viewLifecycleOwner){
