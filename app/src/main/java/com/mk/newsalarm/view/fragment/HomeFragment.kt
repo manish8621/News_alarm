@@ -18,7 +18,7 @@ import androidx.navigation.fragment.findNavController
 import com.mk.newsalarm.MainActivity
 import com.mk.newsalarm.R
 import com.mk.newsalarm.databinding.FragmentHomeBinding
-import com.mk.newsalarm.view.AlarmActivity
+import com.mk.newsalarm.service.AlertService
 import com.mk.newsalarm.view.dataStore
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -43,6 +43,11 @@ class HomeFragment : Fragment() {
         // Inflate the layout for this fragment
         binding = FragmentHomeBinding.inflate(inflater,container,false)
 
+
+
+
+
+
         lifecycleScope.launch{ readFromDataStore() }
         return binding.root
     }
@@ -54,10 +59,10 @@ class HomeFragment : Fragment() {
         calendar[Calendar.MILLISECOND] = 0
 
 
-        val intent = Intent(context,AlarmActivity::class.java).also {
+        val intent = Intent(context,AlertService::class.java).also {
             it.flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
-        pendingIntent = PendingIntent.getActivity(context,REQ_CODE,intent,PendingIntent.FLAG_UPDATE_CURRENT)
+        pendingIntent = PendingIntent.getService(context,REQ_CODE,intent,PendingIntent.FLAG_IMMUTABLE+PendingIntent.FLAG_UPDATE_CURRENT)
 
         //setAlarm
         alarmManager = (activity as MainActivity).getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -120,10 +125,11 @@ class HomeFragment : Fragment() {
 
 
         binding.cancelBtn.setOnClickListener{
-            val intent = Intent(context,AlarmActivity::class.java).also {
+            val intent = Intent(context,AlertService::class.java).also {
                 it.flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
-            if (!::pendingIntent.isInitialized) pendingIntent = PendingIntent.getActivity(context,REQ_CODE,intent,PendingIntent.FLAG_UPDATE_CURRENT)
+            if (!::pendingIntent.isInitialized) pendingIntent = PendingIntent.getService(context,REQ_CODE,intent,PendingIntent.FLAG_IMMUTABLE+PendingIntent.FLAG_UPDATE_CURRENT)
+
 
             //setAlarm
             alarmManager = (activity as MainActivity).getSystemService(Context.ALARM_SERVICE) as AlarmManager

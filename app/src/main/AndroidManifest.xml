@@ -4,7 +4,6 @@
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
-
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
     <application
@@ -17,26 +16,35 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.NewsAlarm"
         tools:targetApi="31">
+
         <activity
             android:name=".MainActivity"
-            android:theme="@style/Theme.AppSplash"
-            android:exported="true">
+            android:exported="true"
+            android:theme="@style/Theme.AppSplash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <meta-data
-                android:name="android.app.lib_name"
-                android:value="" />
-        </activity>
-        <activity
-            android:name="com.mk.newsalarm.view.AlarmActivity"
-            android:exported="true">
-            <meta-data
-                android:name="android.app.lib_name"
-                android:value="" />
 
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
         </activity>
+
+        <activity
+            android:name=".view.AlertActivity"
+            android:exported="true"
+            android:launchMode="singleTop">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+
+        <service
+            android:name=".service.AlertService"
+            android:enabled="true"
+            android:exported="true" />
     </application>
 
 </manifest>
